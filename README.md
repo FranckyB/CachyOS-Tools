@@ -15,6 +15,8 @@ cd generate_folder_thumbnails && ./install.sh
 - **generate_folder_thumbnails** – Dolphin right-click menu to generate/refresh a folder thumbnails from their contents. You can use your own folder icon and set the image position by modifying the script.  Convert SVG to PNG script is provided in utils
 See its [README](generate_folder_thumbnails/README.md).
 
+  ![Example folder thumbnail](generate_folder_thumbnails/example.png)
+
 - **group_files** – Dolphin right-click menu to group selected files into a new subfolder. 
 See its [README](group_files/README.md).
 
