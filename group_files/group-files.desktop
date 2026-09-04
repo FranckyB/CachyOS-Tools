@@ -1,0 +1,12 @@
+[Desktop Entry]
+Actions=GroupFiles
+Type=Service
+MimeType=all/all;
+X-KDE-MaxNumberOfUrls=9999
+X-KDE-Priority=TopLevel
+
+[Desktop Action GroupFiles]
+Name=Group Files into Folder
+Icon=folder-new
+Exec=/home/[USER]/.local/bin/group-files.sh %F
+Terminal=false

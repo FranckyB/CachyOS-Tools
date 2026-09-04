@@ -1,0 +1,12 @@
+[Desktop Entry]
+Actions=RefreshFolderThumbnail
+Type=Service
+MimeType=inode/directory;
+X-KDE-MaxNumberOfUrls=9999
+X-KDE-Priority=TopLevel
+
+[Desktop Action RefreshFolderThumbnail]
+Name=Refresh Folder Thumbnail
+Icon=view-refresh
+Exec=konsole --nofork -e python3 "/home/[USER]/.local/bin/generate_folder_thumbails.py" --refresh %F
+Terminal=false

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Actions=GenerateFolderThumbnail
+Type=Service
+MimeType=inode/directory;
+X-KDE-MaxNumberOfUrls=9999
+X-KDE-Priority=TopLevel
+
+[Desktop Action GenerateFolderThumbnail]
+Name=Generate Folder Thumbnail
+Icon=folder-image
+Exec=konsole --nofork -e python3 "/home/[USER]/.local/bin/generate_folder_thumbails.py" %F
+Terminal=false

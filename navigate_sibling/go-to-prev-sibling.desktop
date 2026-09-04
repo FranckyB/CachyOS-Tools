@@ -1,0 +1,12 @@
+[Desktop Entry]
+Actions=GoToPrevSibling
+Type=Service
+MimeType=inode/directory;
+X-KDE-MaxNumberOfUrls=1
+X-KDE-Priority=TopLevel
+
+[Desktop Action GoToPrevSibling]
+Name=Go to Previous Sibling Folder
+Icon=go-previous
+Exec=python3 "/home/[USER]/.local/bin/navigate-sibling.py" prev "%f"
+Terminal=false
