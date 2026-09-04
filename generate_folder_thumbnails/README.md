@@ -2,7 +2,7 @@
 
 Dolphin right-click menu that generates a custom folder icon by compositing
 the first image (or video frame) found inside a folder onto a folder
-template, recursively for every subfolder.  When possible, with use the frame at
+template, recursively for every subfolder.  When possible, we use the frame at
 the 50% mark.
 
 ## Requirements
@@ -46,7 +46,7 @@ CONTENT_BOX = (15, 67, 240, 208)    # (left, upper, right, lower)
 CORNER_RADIUS = 18
 ```
 
-Edit these pixel coordinates (relative to the 256x256 `script_files\folder.png`
+Edit these pixel coordinates (relative to the 256x256 `script_files/folder.png`
 template) to move or resize where the cover image sits on the folder icon.
 
 For quick tweaking, edit the installed copy directly at

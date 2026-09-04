@@ -13,9 +13,16 @@ mkdir -p "$BIN_DIR" "$MENU_DIR"
 cp "$SCRIPT_DIR/navigate-sibling.py" "$BIN_DIR/"
 chmod +x "$BIN_DIR/navigate-sibling.py"
 
-for f in go-to-next-sibling.desktop go-to-prev-sibling.desktop; do
-    sed "s/\[USER\]/$USER/g" "$SCRIPT_DIR/$f" > "$MENU_DIR/$f"
-done
+# This tool is mainly meant to be bound to a keyboard (Global Shortcut), so
+# the right-click service menu is optional.
+add_service_menu="n"
+read -rp "Also add a Dolphin right-click (service menu) entry? [y/N] " add_service_menu
+if [[ "$add_service_menu" =~ ^[Yy]$ ]]; then
+    for f in go-to-next-sibling.desktop go-to-prev-sibling.desktop; do
+        sed "s/\[USER\]/$USER/g" "$SCRIPT_DIR/$f" > "$MENU_DIR/$f"
+    done
+    echo "Installed service menus into $MENU_DIR."
+fi
 
 if command -v kwriteconfig6 >/dev/null 2>&1; then
     kwriteconfig6 --file dolphinrc --group General --key ShowFullPathInTitlebar true

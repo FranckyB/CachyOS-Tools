@@ -23,10 +23,11 @@ part for you — in System Settings → Shortcuts → Custom Shortcuts → New �
 Global Shortcut → Command/URL:
 
 ```
-paste-into-folder.py
+"/home/[USER]/.local/bin/paste-into-folder.py"
 ```
 
-e.g. bound to Ctrl+Alt+V. Requires exactly one folder selected in the
-active Dolphin view and something previously cut/copied onto the clipboard
-(e.g. via Ctrl+X). Since this runs as a global shortcut, it only acts when
-Dolphin is the focused window; otherwise it does nothing.
+Replace `[USER]` with your own username. e.g. bound to Ctrl+Alt+V. Requires
+exactly one folder selected in the active Dolphin view and something
+previously cut/copied onto the clipboard (e.g. via Ctrl+X). Since this runs
+as a global shortcut, it only acts when Dolphin is the focused window;
+otherwise it does nothing.

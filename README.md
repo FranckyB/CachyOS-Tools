@@ -10,23 +10,27 @@ with your username). Run it from inside the folder:
 cd generate_folder_thumbnails && ./install.sh
 ```
 
-## Tools
+## Tools:
 
-- **generate_folder_thumbnails** – Dolphin right-click menu to generate/refresh a folder thumbnails from their contents. You can use your own folder icon and set the image position by modifying the script.  Convert SVG to PNG script is provided in utils
-See its [README](generate_folder_thumbnails/README.md).
+### generate_folder_thumbnails
+Uses Dolphin's service menus to add a right-click menu to generate user customizable thumbnails per subfolder found.  If the media are clips, we use ffmpeg to generate a thumbnail at the 50% mark.  You can use your own folder icon and modify the image position by modifying the script.  A convert SVG to PNG script is provided in utils to allow using any Icon Pack and generating the needed png.  [README](generate_folder_thumbnails/README.md)
 
-  ![Example folder thumbnail](generate_folder_thumbnails/example.png)
 
-- **group_files** – Dolphin right-click menu to group selected files into a new subfolder. 
-See its [README](group_files/README.md).
+![Example folder thumbnail](generate_folder_thumbnails/example.png)
 
-- **navigate_sibling** – Go to the next/previous sibling folder. Can works as a Dolphin right-click menu, but is meant to be bound to KDE Global Shortcuts (see `navigate-sibling.py`'s docstring for the commands to use).  `install.sh` also enables Dolphin's "Show full path in title bar" setting, which the script relies on.
-See its [README](navigate_sibling/README.md).
+### group_files
 
-- **paste_into** – Paste clipboard files into the folder selected in the active Dolphin window. Bind using KDE Global Shortcut
-  yourself (see `paste-into-folder.py`'s docstring). 
-  See its [README](paste_into/README.md).
-  
-- **utils** – Standalone helper scripts, no need to installed. 
-See its [README](utils/README.md).
+Dolphin right-click menu to group selected files into a new subfolder. Can be used as a Dolphin Keyboard Shortcut if prefered. [README](group_files/README.md).
+
+### navigate_sibling
+
+Go to the next/previous sibling folder. This tool allows quickly navigating subfolders, without the need to go back up, select next folder and then in that next folder. Simply press an Up or Down shortcut to quickly move across the hierarchy.  Can also work as a Dolphin right-click menu, but is meant to be bound to KDE Global Shortcuts (see `navigate-sibling.py`'s README for the commands to use). `install.sh` also enables Dolphin's "Show full path in title bar" setting, which the script relies on. [README](navigate_sibling/README.md) 
+
+### paste_into
+
+Paste clipboard files into the folder selected in the active Dolphin window. Bind using KDE Global Shortcut yourself. [README](paste_into/README.md).
+
+### utils
+
+Standalone helper scripts, no need to install. [README](utils/README.md).
 

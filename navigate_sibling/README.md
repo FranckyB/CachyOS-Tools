@@ -18,10 +18,11 @@ folders and stops at the first/last sibling.
 ./install.sh
 ```
 
-Copies `navigate-sibling.py` to `~/.local/bin/`, installs the **Go to
-Next/Previous Sibling Folder** service menus into
-`~/.local/share/kio/servicemenus/`, and enables Dolphin's full-path title bar
-setting.
+Copies `navigate-sibling.py` to `~/.local/bin/` and enables Dolphin's
+full-path title bar setting. Since this tool is mainly meant to be used via
+a keyboard Global Shortcut, `install.sh` will ask whether you also want the
+**Go to Next/Previous Sibling Folder** right-click service menus installed
+into `~/.local/share/kio/servicemenus/` (optional).
 
 ## Usage
 
