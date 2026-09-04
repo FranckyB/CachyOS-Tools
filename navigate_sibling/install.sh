@@ -20,6 +20,7 @@ read -rp "Also add a Dolphin right-click (service menu) entry? [y/N] " add_servi
 if [[ "$add_service_menu" =~ ^[Yy]$ ]]; then
     for f in go-to-next-sibling.desktop go-to-prev-sibling.desktop; do
         sed "s/\[USER\]/$USER/g" "$SCRIPT_DIR/$f" > "$MENU_DIR/$f"
+        chmod +x "$MENU_DIR/$f"
     done
     echo "Installed service menus into $MENU_DIR."
 fi

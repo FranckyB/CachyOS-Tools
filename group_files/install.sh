@@ -13,5 +13,6 @@ cp "$SCRIPT_DIR/group-files.sh" "$BIN_DIR/"
 chmod +x "$BIN_DIR/group-files.sh"
 
 sed "s/\[USER\]/$USER/g" "$SCRIPT_DIR/group-files.desktop" > "$MENU_DIR/group-files.desktop"
+chmod +x "$MENU_DIR/group-files.desktop"
 
 echo "Installed group_files."

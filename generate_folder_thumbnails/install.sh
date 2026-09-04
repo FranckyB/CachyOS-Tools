@@ -25,6 +25,7 @@ cp -r "$SCRIPT_DIR/script_files" "$BIN_DIR/"
 
 for f in generate-folder-thumbnail.desktop generate-folder-thumbnail-refresh.desktop; do
     sed "s/\[USER\]/$USER/g" "$SCRIPT_DIR/$f" > "$MENU_DIR/$f"
+    chmod +x "$MENU_DIR/$f"
 done
 
 echo "Installed generate_folder_thumbnails."
