@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs navigate-sibling.py into ~/.local/bin and its service menus into
 # ~/.local/share/kio/servicemenus, then enables Dolphin's "Show full path in
-# title bar" setting (required for the global-shortcut, no-argument usage).
+# title bar" setting (required for the no-argument, active-window usage).
 set -euo pipefail
 
 BIN_DIR="$HOME/.local/bin"
@@ -13,11 +13,12 @@ mkdir -p "$BIN_DIR" "$MENU_DIR"
 cp "$SCRIPT_DIR/navigate-sibling.py" "$BIN_DIR/"
 chmod +x "$BIN_DIR/navigate-sibling.py"
 
-# This tool is mainly meant to be bound to a keyboard (Global Shortcut), so
-# the right-click service menu is optional.
-add_service_menu="n"
-read -rp "Also add a Dolphin right-click (service menu) entry? [y/N] " add_service_menu
-if [[ "$add_service_menu" =~ ^[Yy]$ ]]; then
+# The service menu entries are how this tool gets a keyboard shortcut *inside*
+# Dolphin (Settings -> Configure Keyboard Shortcuts), instead of a KDE global
+# shortcut, so they're installed by default.
+add_service_menu="y"
+read -rp "Install Dolphin service menu entries (right-click menu + assignable shortcut)? [Y/n] " add_service_menu
+if [[ ! "$add_service_menu" =~ ^[Nn]$ ]]; then
     for f in go-to-next-sibling.desktop go-to-prev-sibling.desktop; do
         sed "s/\[USER\]/$USER/g" "$SCRIPT_DIR/$f" > "$MENU_DIR/$f"
         chmod +x "$MENU_DIR/$f"
@@ -34,4 +35,6 @@ else
 fi
 
 echo "Installed navigate_sibling."
-echo "Remember to bind 'navigate-sibling.py next' / 'navigate-sibling.py prev' to Global Shortcuts yourself (System Settings > Shortcuts > Custom Shortcuts)."
+echo "To bind keyboard shortcuts to Dolphin: in Dolphin, go to"
+echo "Settings > Configure Keyboard Shortcuts, find 'Go to Next/Previous Sibling Folder',"
+echo "and assign a shortcut of your choice key to each."

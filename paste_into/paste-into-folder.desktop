@@ -1,0 +1,12 @@
+[Desktop Entry]
+Actions=PasteIntoFolder
+Type=Service
+MimeType=inode/directory;
+X-KDE-MaxNumberOfUrls=1
+X-KDE-Priority=TopLevel
+
+[Desktop Action PasteIntoFolder]
+Name=Paste Into Folder
+Icon=edit-paste
+Exec=python3 "/home/[USER]/.local/bin/paste-into-folder.py"
+Terminal=false

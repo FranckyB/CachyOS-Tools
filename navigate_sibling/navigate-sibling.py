@@ -3,22 +3,19 @@
 Navigate to the next or previous sibling folder of the folder currently
 shown in the active Dolphin window, replacing the current tab in-place.
 
-Intended to be bound to a KDE global custom shortcut (System Settings ->
-Shortcuts -> Custom Shortcuts -> New -> Global Shortcut -> Command/URL):
-for example:
+Intended to be bound to a keyboard shortcut *inside Dolphin itself* (Settings
+-> Configure Keyboard Shortcuts -> assign a key to the "Go to Next/Previous
+Sibling Folder" service-menu action installed by install.sh), rather than a
+KDE global shortcut. That way the key combination is only grabbed while
+Dolphin has focus, and other applications never lose access to it. It can
+also still be run manually:
+
     /home/[USER]/.local/bin/navigate-sibling.py next
     /home/[USER]/.local/bin/navigate-sibling.py prev
 
-With no folder argument, the current folder is read from Dolphin's window
-title (requires Dolphin's "Show full path in title bar" setting). Since this
-runs as a global shortcut, it only acts when Dolphin is the focused window;
-otherwise it does nothing.
-
-Can also be called with an explicit folder path (e.g. from a right-click
-service menu passing "%f"):
-
-    navigate-sibling.py next <path>
-    navigate-sibling.py prev <path>
+The current folder is read from the focused Dolphin window's title
+(requires Dolphin's "Show full path in title bar" setting). If Dolphin
+isn't focused, it does nothing.
 
 Stops at the first/last sibling. Skips hidden folders.
 """
@@ -47,17 +44,16 @@ def find_dolphin_services() -> list[str]:
     ]
 
 
-def find_active_dolphin_window(
-    services: list[str], strict: bool = False
-) -> tuple[str, str] | None:
+def find_active_dolphin_window(services: list[str]) -> tuple[str, str] | None:
     """
     Return the (service, window) pair for the focused Dolphin window,
     searching across *all* running Dolphin processes/services.
 
-    If *strict* is True, only return a window that actually reports itself
-    as active; return None otherwise. This matters for global shortcuts,
-    which can fire while a different application has focus, so we must not
-    silently act on a background Dolphin window.
+    A right-click context menu can momentarily grab focus so that no window
+    reports itself active at the instant the script runs; in that case, if
+    there is exactly *one* Dolphin window overall, fall back to it. That is
+    unambiguous, so we still never act on a background window when several
+    are open. Returns None when there is no clear single candidate.
     """
     all_windows: list[tuple[str, str]] = []
     for service in services:
@@ -78,12 +74,12 @@ def find_active_dolphin_window(
                 return service, window
             all_windows.append((service, window))
 
-    if strict:
-        return None
-
-    # Fall back to the first window if none report active (e.g. triggered
-    # from a service menu where Dolphin briefly loses focus).
-    return all_windows[0] if all_windows else None
+    # No window claims to be active (e.g. context-menu focus grab). Only
+    # fall back when there is a single Dolphin window, so the target is
+    # unambiguous.
+    if len(all_windows) == 1:
+        return all_windows[0]
+    return None
 
 
 def _is_url_open(service: str, window: str, uri: str) -> bool:
@@ -94,11 +90,8 @@ def _is_url_open(service: str, window: str, uri: str) -> bool:
     return result.stdout.strip() == "true"
 
 
-def get_window_current_folder(service: str, window: str) -> Path | None:
-    """
-    Return the folder currently shown in *window*, read from its title.
-    Requires Dolphin's "Show full path in title bar" setting to be enabled.
-    """
+def _current_title(service: str, window: str) -> str:
+    """Return the window's current title (the active tab's full path)."""
     result = subprocess.run(
         [
             "qdbus6", service, window,
@@ -107,14 +100,58 @@ def get_window_current_folder(service: str, window: str) -> Path | None:
         ],
         capture_output=True, text=True,
     )
-    title = result.stdout.strip()
+    return result.stdout.strip()
+
+
+def get_window_current_folder(service: str, window: str) -> Path | None:
+    """
+    Return the folder currently shown in *window*, read from its title.
+    Requires Dolphin's "Show full path in title bar" setting to be enabled.
+    """
+    title = _current_title(service, window)
     path = Path(title)
     return path if title and path.is_dir() else None
 
 
-def navigate_in_place(service: str, window: str, target: Path) -> None:
-    """Open *target* as a new tab, then close the previously active tab."""
+def _settled_title(service: str, window: str, timeout: float = 0.6) -> str:
+    """Return the title once it stops changing.
+
+    Tab switches update the title asynchronously, so right after an action
+    the title can lag one step behind; polling until two consecutive reads
+    agree avoids acting on a stale value.
+    """
+    deadline = time.monotonic() + timeout
+    last = _current_title(service, window)
+    while time.monotonic() < deadline:
+        time.sleep(0.04)
+        current = _current_title(service, window)
+        if current == last:
+            return current
+        last = current
+    return last
+
+
+def _activate(service: str, window: str, action: str) -> None:
+    subprocess.run(
+        ["qdbus6", service, window, "org.kde.KMainWindow.activateAction", action],
+        capture_output=True,
+    )
+
+
+def navigate_in_place(service: str, window: str, old: Path, target: Path) -> None:
+    """Open *target* in a new tab, then close the tab showing *old*.
+
+    Every step is verified against the window title instead of assuming tab
+    positions. This matters because a Dolphin-local shortcut auto-repeats
+    while the key is held: rapid back-to-back runs otherwise race Dolphin's
+    asynchronous tab/title updates, reading stale titles (wrong target) and
+    closing whatever tab happens to sit left of the new one before the new
+    tab has even appeared.
+    """
+    old_title = str(old)
+    target_title = str(target)
     uri = target.as_uri()
+
     subprocess.run(
         [
             "qdbus6", service, window,
@@ -124,28 +161,32 @@ def navigate_in_place(service: str, window: str, target: Path) -> None:
         capture_output=True,
     )
 
-    # Wait until the new tab has actually opened before closing the old one,
-    # to avoid closing the only remaining tab (and the whole window) if the
-    # new tab hasn't appeared yet.
-    opened = False
-    for _ in range(20):  # up to ~2 seconds
-        if _is_url_open(service, window, uri):
-            opened = True
+    # Wait until the new tab is open *and active* (title shows the target).
+    # If that never happens, leave all tabs untouched rather than risk
+    # closing the wrong one.
+    deadline = time.monotonic() + 2.0
+    while _current_title(service, window) != target_title:
+        if time.monotonic() > deadline:
+            print("New tab did not become active; leaving tabs untouched.", file=sys.stderr)
+            return
+        time.sleep(0.05)
+
+    # Close the old tab: cycle left until the tab showing *old* is active,
+    # then close it. Stop if we wrap back to the target without finding it.
+    for _ in range(50):
+        _activate(service, window, "activate_prev_tab")
+        title = _settled_title(service, window)
+        if title == old_title:
+            _activate(service, window, "file_close")
             break
-        time.sleep(0.1)
+        if title == target_title:
+            break  # wrapped all the way around; old tab is already gone
 
-    if not opened:
-        print("New tab did not open in time; aborting without closing the old tab.", file=sys.stderr)
-        return
-
-    subprocess.run(
-        ["qdbus6", service, window, "org.kde.KMainWindow.activateAction", "activate_prev_tab"],
-        capture_output=True,
-    )
-    subprocess.run(
-        ["qdbus6", service, window, "org.kde.KMainWindow.activateAction", "file_close"],
-        capture_output=True,
-    )
+    # Make sure we end back on the target tab.
+    for _ in range(50):
+        if _settled_title(service, window) == target_title:
+            break
+        _activate(service, window, "activate_next_tab")
 
 
 def get_sibling_folders(path: Path) -> list[Path]:
@@ -190,9 +231,13 @@ def navigate(direction: str, current_path: Path, wrap: bool = False) -> Path | N
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} (next|prev) [folder]", file=sys.stderr)
+        print(f"Usage: {sys.argv[0]} (next|prev)", file=sys.stderr)
         sys.exit(1)
 
+    # Dolphin's service-menu framework automatically appends the current /
+    # selected folder path to the Exec command (that is how Type=Service
+    # menus operate on files). We always act on the active window's folder
+    # instead, so those extra path arguments are accepted and ignored.
     # Refuse to run if another invocation is already in progress, since
     # overlapping runs can race the tab open/close sequence and end up
     # closing the wrong tab (or the whole window).
@@ -212,39 +257,17 @@ def main() -> None:
         print(f"Invalid direction: {direction}", file=sys.stderr)
         sys.exit(1)
 
-    service = None
-    window = None
-
     services = find_dolphin_services()
-
-    # Treat a missing or empty/unresolved "%f" argument the same way, since
-    # Dolphin may pass an empty string instead of omitting the argument when
-    # a shortcut fires with nothing selected.
-    given_path = sys.argv[2].strip() if len(sys.argv) >= 3 else ""
-
-    # When triggered without an explicit path (global shortcut), require a
-    # genuinely focused Dolphin window so we never act on a background one.
-    if services:
-        found = find_active_dolphin_window(services, strict=not given_path)
-        if found:
-            service, window = found
-
-    if not given_path and services and not window:
+    found = find_active_dolphin_window(services) if services else None
+    if not found:
         print("Dolphin is not focused; ignoring shortcut.", file=sys.stderr)
         sys.exit(0)
+    service, window = found
 
-    if given_path:
-        current = Path(given_path).expanduser().resolve()
-    elif service and window:
-        # No folder given (e.g. triggered via keyboard shortcut): read the
-        # currently displayed folder from the window title.
-        current = get_window_current_folder(service, window)
-        if current is None:
-            print("Could not determine the current folder from the window title.", file=sys.stderr)
-            print('Enable Dolphin\'s "Show full path in title bar" setting.', file=sys.stderr)
-            sys.exit(1)
-    else:
-        print("No folder given and no running Dolphin window found.", file=sys.stderr)
+    current = get_window_current_folder(service, window)
+    if current is None:
+        print("Could not determine the current folder from the window title.", file=sys.stderr)
+        print('Enable Dolphin\'s "Show full path in title bar" setting.', file=sys.stderr)
         sys.exit(1)
 
     if not current.is_dir():
@@ -257,11 +280,7 @@ def main() -> None:
         sys.exit(0)
 
     print(f"Navigating to: {target}")
-
-    if service and window:
-        navigate_in_place(service, window, target)
-    else:
-        subprocess.Popen(["dolphin", str(target)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    navigate_in_place(service, window, current, target)
 
 
 if __name__ == "__main__":

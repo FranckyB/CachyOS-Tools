@@ -3,15 +3,17 @@
 Paste the clipboard's cut/copied files into the folder currently selected
 in the active Dolphin window, without navigating into it.
 
-Intended to be bound to a KDE global custom shortcut (System Settings ->
-Shortcuts -> Custom Shortcuts -> New -> Global Shortcut -> Command/URL),
-e.g. bound to Ctrl+Alt+V:
+Intended to be bound to a keyboard shortcut *inside Dolphin itself* (Settings
+-> Configure Keyboard Shortcuts -> assign a key to the "Paste Into Folder"
+service-menu action installed by install.sh), rather than a KDE global
+shortcut. That way the key combination is only grabbed while Dolphin has
+focus, and other applications never lose access to it. It can also still be
+run manually:
     /home/[USER]/.local/bin/paste-into-folder.py
 
 Requires exactly one folder to be selected in the active Dolphin view, and
-something previously cut/copied onto the clipboard (e.g. via Ctrl+X). Since
-this runs as a global shortcut, it only acts when Dolphin is the focused
-window; otherwise it does nothing.
+something previously cut/copied onto the clipboard (e.g. via Ctrl+X). If
+Dolphin isn't focused, it does nothing.
 """
 
 import re

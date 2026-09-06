@@ -8,5 +8,5 @@ X-KDE-Priority=TopLevel
 [Desktop Action GoToNextSibling]
 Name=Go to Next Sibling Folder
 Icon=go-next
-Exec=python3 "/home/[USER]/.local/bin/navigate-sibling.py" next "%f"
+Exec=python3 "/home/[USER]/.local/bin/navigate-sibling.py" next
 Terminal=false

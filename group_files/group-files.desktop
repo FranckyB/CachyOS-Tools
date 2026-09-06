@@ -8,5 +8,5 @@ X-KDE-Priority=TopLevel
 [Desktop Action GroupFiles]
 Name=Group Files into Folder
 Icon=folder-new
-Exec=/home/[USER]/.local/bin/group-files.sh %F
+Exec=python3 "/home/[USER]/.local/bin/group-files.py" %F
 Terminal=false

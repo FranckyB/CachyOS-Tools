@@ -24,11 +24,11 @@ Dolphin right-click menu to group selected files into a new subfolder. Can be us
 
 ### navigate_sibling
 
-Go to the next/previous sibling folder. This tool allows quickly navigating subfolders, without the need to go back up, select next folder and then in that next folder. Simply press an Up or Down shortcut to quickly move across the hierarchy.  Can also work as a Dolphin right-click menu, but is meant to be bound to KDE Global Shortcuts (see `navigate-sibling.py`'s README for the commands to use). `install.sh` also enables Dolphin's "Show full path in title bar" setting, which the script relies on. [README](navigate_sibling/README.md) 
+Go to the next/previous sibling folder. This tool allows quickly navigating subfolders, without the need to go back up, select next folder and then in that next folder. Simply press an Up or Down shortcut to quickly move across the hierarchy. Meant to be bound to a keyboard shortcut inside Dolphin itself (Settings > Configure Keyboard Shortcuts).  `install.sh` also enables Dolphin's "Show full path in title bar" setting, which the script relies on. [README](navigate_sibling/README.md) 
 
 ### paste_into
 
-Paste clipboard files into the folder selected in the active Dolphin window. Bind using KDE Global Shortcut yourself. [README](paste_into/README.md).
+Paste clipboard files into the folder selected in the active Dolphin window. Meant to be bound to a keyboard shortcut inside Dolphin itself (Settings > Configure Keyboard Shortcuts), not a KDE Global Shortcut, so other apps don't lose access to the same key combination. [README](paste_into/README.md).
 
 ### utils
 
