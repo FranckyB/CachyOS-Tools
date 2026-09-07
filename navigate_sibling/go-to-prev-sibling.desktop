@@ -1,7 +1,7 @@
 [Desktop Entry]
 Actions=GoToPrevSibling
 Type=Service
-MimeType=inode/directory;
+MimeType=all/all;
 X-KDE-MaxNumberOfUrls=1
 X-KDE-Priority=TopLevel
 

@@ -82,3 +82,12 @@ window.
   one, so right-click works reliably without ever acting on a background
   window when several are open.
 
+- Changed the service-menu `MimeType` from `inode/directory;` to `all/all;`.
+  The directory-only restriction meant the action was hidden from the
+  right-click menu *and* disabled as a keyboard shortcut whenever a **file**
+  was selected, so navigation silently did nothing until you clicked empty
+  space. With `all/all` the action stays enabled regardless of the
+  selection; the script still navigates the window's current folder (it
+  ignores the appended path), so a selected file has no effect on the
+  result.
+
