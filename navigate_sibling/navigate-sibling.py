@@ -107,10 +107,25 @@ def get_window_current_folder(service: str, window: str) -> Path | None:
     """
     Return the folder currently shown in *window*, read from its title.
     Requires Dolphin's "Show full path in title bar" setting to be enabled.
+
+    Returns None for anything that isn't a plain local directory path — e.g.
+    when Dolphin is showing a remote/virtual location (trash:///, sftp://,
+    recentlyused:, ...), whose title is a URL rather than a filesystem path.
+    Feeding those into the sibling logic would produce a malformed target URI
+    and make Dolphin show an "Invalid URL" dialog.
     """
     title = _current_title(service, window)
-    path = Path(title)
-    return path if title and path.is_dir() else None
+    if not title or "://" in title or ":" in title.split("/")[0]:
+        # a URL scheme (trash:///, sftp://..., recentlyused:, etc.), not a path
+        return None
+    path = Path(title).expanduser()
+    if not path.is_absolute():
+        return None
+    try:
+        path = path.resolve()
+    except OSError:
+        return None
+    return path if path.is_dir() else None
 
 
 def _settled_title(service: str, window: str, timeout: float = 0.6) -> str:
@@ -150,6 +165,13 @@ def navigate_in_place(service: str, window: str, old: Path, target: Path) -> Non
     """
     old_title = str(old)
     target_title = str(target)
+
+    # Never hand Dolphin a target it can't open as a local folder — that is
+    # what triggers its "Invalid URL" dialog.
+    if not target.is_dir():
+        print(f"Target is not a local directory: {target}", file=sys.stderr)
+        return
+
     uri = target.as_uri()
 
     subprocess.run(
