@@ -153,6 +153,11 @@ def _activate(service: str, window: str, action: str) -> None:
     )
 
 
+def _natural_name_key(path: Path) -> list[int | str]:
+    """Match Dolphin-style natural ordering for numbered folder names."""
+    return [int(part) if part.isdigit() else part.lower() for part in re.split(r"(\d+)", path.name)]
+
+
 def navigate_in_place(service: str, window: str, old: Path, target: Path) -> None:
     """Open *target* in a new tab, then close the tab showing *old*.
 
@@ -221,7 +226,7 @@ def get_sibling_folders(path: Path) -> list[Path]:
         entry for entry in parent.iterdir()
         if entry.is_dir() and not entry.name.startswith(".")
     ]
-    return sorted(siblings, key=lambda p: p.name.lower())
+    return sorted(siblings, key=_natural_name_key)
 
 
 def navigate(direction: str, current_path: Path, wrap: bool = False) -> Path | None:

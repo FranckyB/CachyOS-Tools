@@ -49,6 +49,15 @@ DESKTOP_TEMPLATE_ICON = "script_files/folder.png"
 # .directory template (e.g. Icon=./.folder.png).
 OUTPUT_ICON_NAME = ".folder.png"
 
+# Prefer these base names when choosing a folder cover source.
+# First match in this list wins regardless of image extension; anything else
+# falls back to alphabetical order.
+PREFERRED_IMAGE_NAMES = [
+    "fanart",
+    "landscape",
+    "poster",
+]
+
 # Image extensions to consider as folder cover sources.
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif")
 
@@ -242,29 +251,46 @@ def all_files_with_extensions(
 ) -> list[Path]:
     """
     Return all files in *folder* matching one of *extensions*, sorted
-    case-insensitively by name (matching how file managers typically sort,
-    unlike Python's default case-sensitive string sort). Files smaller than
-    MIN_MEDIA_FILE_SIZE are skipped as likely corrupt/truncated.
+    by configured preference first, then case-insensitively by name.
     """
     results: list[Path] = []
     try:
-        entries = sorted(folder.iterdir(), key=lambda p: p.name.casefold())
+        preferred_name_ranks = {
+            name.casefold(): index for index, name in enumerate(PREFERRED_IMAGE_NAMES)
+        }
+
+        def sort_key(path: Path) -> tuple[int, str]:
+            preferred_rank = preferred_name_ranks.get(
+                path.stem.casefold(),
+                len(preferred_name_ranks),
+            )
+            return preferred_rank, path.name.casefold()
+
+        entries = sorted(folder.iterdir(), key=sort_key)
         for entry in entries:
             if not entry.is_file():
                 continue
             if entry.name.lower().endswith(extensions):
                 if ignore_name and entry.name == ignore_name:
                     continue
-                try:
-                    if entry.stat().st_size < MIN_MEDIA_FILE_SIZE:
-                        print(f"Skipping too-small file (likely corrupt): {entry}")
-                        continue
-                except OSError:
-                    continue
                 results.append(entry)
     except PermissionError:
         pass
     return results
+
+
+def is_usable_media_file(path: Path, *, log_skip: bool = False) -> bool:
+    """
+    Return True when *path* exists and is large enough to be worth trying.
+    """
+    try:
+        if path.stat().st_size < MIN_MEDIA_FILE_SIZE:
+            if log_skip:
+                print(f"Skipping too-small file (likely corrupt): {path}")
+            return False
+    except OSError:
+        return False
+    return True
 
 
 def media_sources_in(folder: Path) -> list[Path]:
@@ -284,8 +310,10 @@ def first_media_source_in(folder: Path) -> Path | None:
     no image is found. Returns the *original* media path, not an extracted
     thumbnail. Returns None if neither exists.
     """
-    sources = media_sources_in(folder)
-    return sources[0] if sources else None
+    for source in media_sources_in(folder):
+        if is_usable_media_file(source):
+            return source
+    return None
 
 
 def is_video_file(path: Path) -> bool:
@@ -377,6 +405,9 @@ def process_tree(
 
             created = False
             for candidate in candidates:
+                if not is_usable_media_file(candidate, log_skip=True):
+                    continue
+
                 # If the source is a video, extract a temporary thumbnail frame.
                 temp_thumb: Path | None = None
                 if is_video_file(candidate):
