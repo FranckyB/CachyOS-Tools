@@ -1,0 +1,12 @@
+[Desktop Entry]
+Actions=MoveContentsUp
+Type=Service
+MimeType=all/all;
+X-KDE-MaxNumberOfUrls=1
+X-KDE-Priority=TopLevel
+
+[Desktop Action MoveContentsUp]
+Name=Move Contents Up
+Icon=go-up
+Exec=python3 "/home/[USER]/.local/bin/move-up.py"
+Terminal=false
